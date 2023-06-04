@@ -1,3 +1,5 @@
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+
 use crate::ctx::Ctx;
 use crate::JwtClaims;
 use crate::{web::AUTH_TOKEN, Error, Result};
@@ -7,6 +9,7 @@ use axum::extract::FromRequestParts;
 use axum::http::request::Parts;
 use axum::RequestPartsExt;
 use axum::{http::Request, middleware::Next, response::Response};
+use chrono::{DateTime, NaiveDateTime, Utc};
 use jsonwebtoken::{decode, DecodingKey, Validation};
 use tower_cookies::Cookies;
 
@@ -45,6 +48,22 @@ fn parse_token(token: String) -> Result<String> {
     let token_data = decode::<JwtClaims>(&token, &decoding_key, &Validation::default());
 
     if let Ok(token) = token_data {
+        let expiration_time = token.claims.expiry;
+
+        let current_time = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("SystemTime before UNIX EPOCH!")
+            .as_secs();
+
+        println!(
+            "Expires at {}, time is now {} ",
+            format_seconds_since_epoch(expiration_time),
+            format_seconds_since_epoch(current_time)
+        );
+        if expiration_time < current_time {
+            return Err(Error::AuthFailTokenExpired);
+        }
+
         // Retrieve the username from the JWT claims
         let username = token.claims.username;
 
@@ -54,4 +73,10 @@ fn parse_token(token: String) -> Result<String> {
     } else {
         Err(Error::AuthFailTokenWrongFormat)
     }
+}
+
+fn format_seconds_since_epoch(seconds: u64) -> String {
+    let naive_datetime = NaiveDateTime::from_timestamp_opt(seconds as i64, 0).unwrap();
+    let datetime: DateTime<Utc> = DateTime::from_utc(naive_datetime, Utc);
+    datetime.format("%Y-%m-%d %H:%M:%S").to_string()
 }

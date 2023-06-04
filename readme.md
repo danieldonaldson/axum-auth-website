@@ -1,10 +1,8 @@
-
-
+Basics done:
 axum
 sailfish
-jwt auth
-user properties: name and group
+jwt auth with name and expiry
 
 TODO
 tailwind
-JS library
+JS library (alpine.js)

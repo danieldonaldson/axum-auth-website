@@ -9,6 +9,7 @@ pub enum Error {
     LoginFail,
     AuthFailNoAuthTokenCookie,
     AuthFailTokenWrongFormat,
+    AuthFailTokenExpired,
 }
 
 impl IntoResponse for Error {

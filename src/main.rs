@@ -10,11 +10,10 @@ use sailfish::TemplateOnce;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::time::{Duration, SystemTime};
-
 use tower_cookies::CookieManagerLayer;
 use tower_cookies::{Cookie, Cookies};
 
-pub use self::error::{Error, Result};
+use self::error::{Error, Result};
 
 mod ctx;
 mod web;
@@ -28,7 +27,7 @@ struct User {
 #[derive(Debug, Serialize, Deserialize)]
 struct JwtClaims {
     username: String,
-    exp: usize,
+    expiry: u64,
     // ... add other claims as needed
 }
 
@@ -37,15 +36,15 @@ mod error;
 impl JwtClaims {
     fn new(username: &str) -> Self {
         let expiration = SystemTime::now()
-            .checked_add(Duration::from_secs(3600)) // JWT expires in 1 hour
+            .checked_add(Duration::from_secs(3600 * 24 * 31)) // JWT expires in 1 month
             .expect("Failed to calculate expiration time");
 
         JwtClaims {
             username: username.to_owned(),
-            exp: expiration
+            expiry: expiration
                 .duration_since(SystemTime::UNIX_EPOCH)
                 .unwrap()
-                .as_secs() as usize,
+                .as_secs(),
         }
     }
 }
