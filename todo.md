@@ -1,15 +1,9 @@
 axum:
  - clean up
-   - move encode/decode logic into a module
-   - move JWTclaims and username object out
-   - move out templates to another file
-   - split out auth vs non auth endpoints
-   - group endpoints together in functions
    - add logging for errors
    - add static routing for images/css/etc
 
 jwt:
- - remove token on logout
  - when there is an error on the token, redirect to /login
  - read username from database
     - split from password to make it easier

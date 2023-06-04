@@ -5,7 +5,7 @@ use std::time::{Duration, SystemTime};
 pub struct JwtClaims {
     pub username: String,
     pub exp: u64,
-    // ... add other claims as needed
+    pub group: u8,
 }
 
 impl JwtClaims {
@@ -20,6 +20,7 @@ impl JwtClaims {
                 .duration_since(SystemTime::UNIX_EPOCH)
                 .unwrap()
                 .as_secs(),
+            group: 1,
         }
     }
 }

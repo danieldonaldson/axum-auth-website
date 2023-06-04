@@ -10,6 +10,8 @@ pub enum Error {
     AuthFailTokenWrongFormat,
     AuthFailTokenExpired,
     AuthFailTokenUnexpected,
+    AuthFailUserNotFound,
+    DBFailFieldNotFound(String),
 }
 
 impl IntoResponse for Error {

@@ -1,18 +1,15 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use crate::app_config::AppConfig;
 use crate::ctx::Ctx;
 use crate::jwt_claims::JwtClaims;
-use crate::{
-    web::{AUTH_TOKEN, SECRET_KEY},
-    Error, Result,
-};
+use crate::{mw::AUTH_TOKEN, Error, Result};
 
 use async_trait::async_trait;
 use axum::extract::FromRequestParts;
 use axum::http::request::Parts;
 use axum::RequestPartsExt;
 use axum::{http::Request, middleware::Next, response::Response};
-use chrono::{DateTime, NaiveDateTime, Utc};
 use jsonwebtoken::{decode, DecodingKey, Validation};
 use tower_cookies::Cookies;
 
@@ -36,18 +33,24 @@ impl<S: Send + Sync> FromRequestParts<S> for Ctx {
         // println!("->> {:<12} - Ctx", "EXTRACTOR");
 
         let cookies = parts.extract::<Cookies>().await.unwrap();
+        let config = parts
+            .extensions
+            .get::<AppConfig>()
+            .cloned()
+            .ok_or(())
+            .unwrap();
         let auth_token = cookies.get(AUTH_TOKEN).map(|c| c.value().to_string());
 
         let username = auth_token
             .ok_or(Error::AuthFailNoAuthTokenCookie)
-            .and_then(parse_token)?;
+            .and_then(|token| parse_token(token, config.jwt_secret_key))?;
 
         Ok(Ctx::new(username))
     }
 }
 
-fn parse_token(token: String) -> Result<String> {
-    let decoding_key = DecodingKey::from_secret(SECRET_KEY.as_ref());
+fn parse_token(token: String, secret: String) -> Result<String> {
+    let decoding_key = DecodingKey::from_secret(secret.as_ref());
     let token_data =
         decode::<JwtClaims>(&token, &decoding_key, &Validation::default());
 
@@ -56,14 +59,9 @@ fn parse_token(token: String) -> Result<String> {
 
         let current_time = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .expect("SystemTime before UNIX EPOCH!")
+            .unwrap()
             .as_secs();
 
-        println!(
-            "Expires at {}, time is now {} ",
-            format_seconds_since_epoch(expiration_time),
-            format_seconds_since_epoch(current_time)
-        );
         if expiration_time < current_time {
             return Err(Error::AuthFailTokenExpired);
         }
@@ -72,16 +70,9 @@ fn parse_token(token: String) -> Result<String> {
         let username = token.claims.username;
 
         // Use the username as needed
-        println!("Username: {}", username);
+        // println!("Username: {}", username);
         Ok(username)
     } else {
         Err(Error::AuthFailTokenWrongFormat)
     }
-}
-
-fn format_seconds_since_epoch(seconds: u64) -> String {
-    let naive_datetime =
-        NaiveDateTime::from_timestamp_opt(seconds as i64, 0).unwrap();
-    let datetime: DateTime<Utc> = DateTime::from_utc(naive_datetime, Utc);
-    datetime.format("%Y-%m-%d %H:%M:%S").to_string()
 }
