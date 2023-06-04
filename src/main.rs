@@ -1,13 +1,11 @@
 use axum::{
-    extract::Extension,
-    http::{header, HeaderValue, StatusCode},
     middleware,
-    response::{Html, IntoResponse, Json, Response},
+    response::{Html, IntoResponse, Json},
     routing::get,
     Router,
 };
 use ctx::Ctx;
-use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
+use jsonwebtoken::{encode, EncodingKey, Header};
 use sailfish::TemplateOnce;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};

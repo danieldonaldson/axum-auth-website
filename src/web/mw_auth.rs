@@ -3,12 +3,11 @@ use crate::JwtClaims;
 use crate::{web::AUTH_TOKEN, Error, Result};
 
 use async_trait::async_trait;
-use axum::extract::{FromRequestParts, State};
+use axum::extract::FromRequestParts;
 use axum::http::request::Parts;
 use axum::RequestPartsExt;
 use axum::{http::Request, middleware::Next, response::Response};
 use jsonwebtoken::{decode, DecodingKey, Validation};
-use lazy_regex::regex_captures;
 use tower_cookies::Cookies;
 
 pub async fn mw_require_auth<B>(
@@ -33,15 +32,15 @@ impl<S: Send + Sync> FromRequestParts<S> for Ctx {
         let cookies = parts.extract::<Cookies>().await.unwrap();
         let auth_token = cookies.get(AUTH_TOKEN).map(|c| c.value().to_string());
 
-        let (user_id, exp, sign) = auth_token
+        let username = auth_token
             .ok_or(Error::AuthFailNoAuthTokenCookie)
             .and_then(parse_token)?;
 
-        Ok(Ctx::new(user_id))
+        Ok(Ctx::new(username))
     }
 }
 
-fn parse_token(token: String) -> Result<(String, String, String)> {
+fn parse_token(token: String) -> Result<String> {
     let decoding_key = DecodingKey::from_secret("secret".as_ref());
     let token_data = decode::<JwtClaims>(&token, &decoding_key, &Validation::default());
 
@@ -51,7 +50,7 @@ fn parse_token(token: String) -> Result<(String, String, String)> {
 
         // Use the username as needed
         println!("Username: {}", username);
-        Ok((username, "".to_owned(), "".to_owned()))
+        Ok(username)
     } else {
         Err(Error::AuthFailTokenWrongFormat)
     }
