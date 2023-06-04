@@ -5,9 +5,6 @@ axum:
 
 jwt:
  - when there is an error on the token, redirect to /login
- - read username from database
-    - split from password to make it easier
-    - abstract this so we can connect to postgres, aws, etc.
  - authenticate against password
     - start with just a basic auth
     - using argon2

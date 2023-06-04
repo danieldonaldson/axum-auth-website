@@ -2,9 +2,12 @@ use aws_config::meta::region::RegionProviderChain;
 use aws_sdk_dynamodb::types::AttributeValue;
 use aws_sdk_dynamodb::Client;
 
-use crate::Error::DBFailFieldNotFound
+use crate::error::Result;
+use crate::Error::*;
 
 use crate::user::User;
+
+use super::SECTION;
 
 pub async fn create_db_client() -> Client {
     let region_provider =
@@ -13,35 +16,49 @@ pub async fn create_db_client() -> Client {
     Client::new(&config)
 }
 
-pub async fn get_user_by_email(db_client: Client) -> Option<User> {
-    let item = db_client
+pub async fn get_user_by_email(
+    db_client: Client,
+    username: String,
+) -> Result<Option<User>> {
+    let item = match db_client
         .get_item()
         .table_name("students")
-        .key("email", AttributeValue::S("dnldan001".to_string()))
-        .key("cohort", AttributeValue::S("UCTOHS".to_string()))
+        .key("email", AttributeValue::S(username))
+        .key("cohort", AttributeValue::S(SECTION.to_string()))
         .send()
         .await
-        .unwrap();
+    {
+        Ok(i) => i,
+        Err(_) => return Err(DBConnectionFail),
+    };
 
     if let Some(found) = item.item {
         let email = found
             .get("email")
             .ok_or(DBFailFieldNotFound("email".to_string()))?
             .as_s()
-            .unwrap(); //TODO: fix this??
+            .unwrap(); // handle this?
         let known_as = found
             .get("known_as")
             .ok_or(DBFailFieldNotFound("known_as".to_string()))?
             .as_s()
-            .unwrap(); //TODO: fix this??
-                       // dbg!(email_result);
+            .unwrap(); // handle this?
+        let password_result = found
+            .get("password")
+            .ok_or(DBFailFieldNotFound("password".to_string()))?
+            .as_s();
+        let password = match password_result {
+            Err(_) => return Err(DBFailFieldEmpty("password".to_string())),
+            Ok(p) => p,
+        };
 
         let user = User {
             email: email.to_string(),
             known_as: known_as.to_string(),
+            password: password.to_string(),
         };
-        return user;
+        Ok(Some(user))
     } else {
-        return None;
+        Ok(None)
     }
 }

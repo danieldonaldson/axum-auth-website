@@ -9,9 +9,13 @@ pub enum Error {
     AuthFailNoAuthTokenCookie,
     AuthFailTokenWrongFormat,
     AuthFailTokenExpired,
-    AuthFailTokenUnexpected,
     AuthFailUserNotFound,
+    AuthFailIncorrectPassword,
+    QueryFailNoUsername,
+    QueryFailNoPassword,
     DBFailFieldNotFound(String),
+    DBFailFieldEmpty(String),
+    DBConnectionFail,
 }
 
 impl IntoResponse for Error {
