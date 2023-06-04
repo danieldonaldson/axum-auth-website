@@ -108,7 +108,7 @@ async fn handler_index() -> impl IntoResponse {
 }
 
 async fn handler_home(ctx: Ctx) -> impl IntoResponse {
-    let name = &ctx.username();
+    let name = ctx.username().as_str();
 
     let body = Home { name }.render_once().unwrap();
     Html(body)
