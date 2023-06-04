@@ -1,10 +1,12 @@
 use axum::{
     extract::Extension,
     http::{header, HeaderValue, StatusCode},
+    middleware,
     response::{Html, IntoResponse, Json, Response},
     routing::get,
     Router,
 };
+use ctx::Ctx;
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use sailfish::TemplateOnce;
 use serde::{Deserialize, Serialize};
@@ -15,6 +17,9 @@ use tower_cookies::CookieManagerLayer;
 use tower_cookies::{Cookie, Cookies};
 
 pub use self::error::{Error, Result};
+
+mod ctx;
+mod web;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct User {
@@ -51,11 +56,21 @@ impl JwtClaims {
 #[template(path = "index.stpl")]
 struct Greet;
 
+#[derive(TemplateOnce)]
+#[template(path = "home.stpl")]
+struct Home<'a> {
+    name: &'a str,
+}
+
+//#region main
+
 #[tokio::main]
 async fn main() {
     let app = Router::new()
         .route("/", get(handler_index))
-        .route("/login", get(login_handler))
+        .route("/login", get(handler_login))
+        .route("/home", get(handler_home))
+        .route_layer(middleware::from_fn(web::mw_auth::mw_require_auth))
         .layer(CookieManagerLayer::new());
 
     axum::Server::bind(&"0.0.0.0:3000".parse().unwrap())
@@ -64,7 +79,9 @@ async fn main() {
         .unwrap();
 }
 
-async fn login_handler(cookies: Cookies) -> Result<Json<Value>> {
+//#endregion
+
+async fn handler_login(cookies: Cookies) -> Result<Json<Value>> {
     // Simulating user authentication
     let user = User {
         username: "john_doe".to_owned(),
@@ -90,5 +107,12 @@ async fn login_handler(cookies: Cookies) -> Result<Json<Value>> {
 
 async fn handler_index() -> impl IntoResponse {
     let body = Greet.render_once().unwrap();
+    Html(body)
+}
+
+async fn handler_home(ctx: Ctx) -> impl IntoResponse {
+    let name = &ctx.username();
+
+    let body = Home { name }.render_once().unwrap();
     Html(body)
 }
