@@ -1,8 +1,11 @@
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::ctx::Ctx;
-use crate::JwtClaims;
-use crate::{web::AUTH_TOKEN, Error, Result};
+use crate::jwt_claims::JwtClaims;
+use crate::{
+    web::{AUTH_TOKEN, SECRET_KEY},
+    Error, Result,
+};
 
 use async_trait::async_trait;
 use axum::extract::FromRequestParts;
@@ -30,7 +33,7 @@ impl<S: Send + Sync> FromRequestParts<S> for Ctx {
     type Rejection = Error;
 
     async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self> {
-        println!("->> {:<12} - Ctx", "EXTRACTOR");
+        // println!("->> {:<12} - Ctx", "EXTRACTOR");
 
         let cookies = parts.extract::<Cookies>().await.unwrap();
         let auth_token = cookies.get(AUTH_TOKEN).map(|c| c.value().to_string());
@@ -44,11 +47,12 @@ impl<S: Send + Sync> FromRequestParts<S> for Ctx {
 }
 
 fn parse_token(token: String) -> Result<String> {
-    let decoding_key = DecodingKey::from_secret("secret".as_ref());
-    let token_data = decode::<JwtClaims>(&token, &decoding_key, &Validation::default());
+    let decoding_key = DecodingKey::from_secret(SECRET_KEY.as_ref());
+    let token_data =
+        decode::<JwtClaims>(&token, &decoding_key, &Validation::default());
 
     if let Ok(token) = token_data {
-        let expiration_time = token.claims.expiry;
+        let expiration_time = token.claims.exp;
 
         let current_time = SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -76,7 +80,8 @@ fn parse_token(token: String) -> Result<String> {
 }
 
 fn format_seconds_since_epoch(seconds: u64) -> String {
-    let naive_datetime = NaiveDateTime::from_timestamp_opt(seconds as i64, 0).unwrap();
+    let naive_datetime =
+        NaiveDateTime::from_timestamp_opt(seconds as i64, 0).unwrap();
     let datetime: DateTime<Utc> = DateTime::from_utc(naive_datetime, Utc);
     datetime.format("%Y-%m-%d %H:%M:%S").to_string()
 }

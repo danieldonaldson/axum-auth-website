@@ -6,10 +6,10 @@ pub type Result<T> = core::result::Result<T, Error>;
 
 #[derive(Debug)]
 pub enum Error {
-    LoginFail,
     AuthFailNoAuthTokenCookie,
     AuthFailTokenWrongFormat,
     AuthFailTokenExpired,
+    AuthFailTokenUnexpected,
 }
 
 impl IntoResponse for Error {
