@@ -30,6 +30,8 @@ pub const ENV_FILE: &str = "env.toml";
 
 #[tokio::main]
 async fn main() {
+    std::env::set_var("RUST_BACKTRACE", "1");
+
     let env_config = load_config();
 
     let db_client = dynamo::create_db_client().await;

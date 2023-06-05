@@ -18,6 +18,7 @@ pub enum Error {
     QueryFailNoPassword,
     DBFailFieldNotFound(String),
     DBFailFieldEmpty(String),
+    DBFailedToCreateUser,
     DBConnectionFail,
 }
 

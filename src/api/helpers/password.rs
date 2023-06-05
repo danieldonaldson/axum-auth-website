@@ -22,7 +22,7 @@ pub fn hash_password(
     let salt = salt.unwrap_or(generate_salt(16));
     let hash = argon2::hash_encoded(password.as_ref(), salt.as_ref(), &config)
         .unwrap();
-    println!("hash={}\nsalt={}", hash, salt);
+    // println!("hash={}\nsalt={}", hash, salt);
     (hash, salt)
 }
 
