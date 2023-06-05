@@ -12,7 +12,7 @@ pub struct JwtClaims {
 }
 
 impl JwtClaims {
-    pub fn new(username: &str) -> Self {
+    pub fn new(username: &str, group: u8) -> Self {
         let expiration = SystemTime::now()
             .checked_add(Duration::from_secs(EXPIRY_TIME))
             .expect("Failed to calculate expiration time");
@@ -23,7 +23,7 @@ impl JwtClaims {
                 .duration_since(SystemTime::UNIX_EPOCH)
                 .unwrap()
                 .as_secs(),
-            group: 1,
+            group,
         }
     }
 }

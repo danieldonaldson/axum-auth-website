@@ -39,25 +39,36 @@ pub async fn get_user_by_email(
             .get("email")
             .ok_or(DBFailFieldNotFound("email".to_string()))?
             .as_s()
+            .cloned()
             .unwrap(); // handle this?
         let known_as = found
             .get("known_as")
             .ok_or(DBFailFieldNotFound("known_as".to_string()))?
             .as_s()
+            .cloned()
             .unwrap(); // handle this?
+        let group = found
+            .get("group_id")
+            .ok_or(DBFailFieldNotFound("group_id".to_string()))?
+            .as_n()
+            .unwrap()
+            .parse::<u8>()
+            .unwrap();
         let password_result = found
             .get("password")
             .ok_or(DBFailFieldNotFound("password".to_string()))?
-            .as_s();
+            .as_s()
+            .cloned();
         let password = match password_result {
             Err(_) => return Err(DBFailFieldEmpty("password".to_string())),
             Ok(p) => p,
         };
 
         let user = User {
-            email: email.to_string(),
-            known_as: known_as.to_string(),
-            password: password.to_string(),
+            email,
+            known_as,
+            password,
+            group,
         };
         Ok(Some(user))
     } else {
@@ -80,7 +91,8 @@ pub async fn create_user(
         .item("email", user_av)
         .item("password", password_av)
         .item("cohort", AttributeValue::S(SECTION.to_string()))
-        .item("known_as", AttributeValue::S("GG".to_string()));
+        .item("known_as", AttributeValue::S("GG".to_string()))
+        .item("group_id", AttributeValue::N("0".to_string())); // WHYYYYY
 
     println!("Executing request [{request:?}] to add item...");
 

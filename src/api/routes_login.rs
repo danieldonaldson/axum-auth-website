@@ -39,7 +39,7 @@ async fn handler_login(
                 if hashed_password != password {
                     return Err(Error::AuthFailIncorrectPassword);
                 }
-                let jwt = create_jwt(&user.email, &config);
+                let jwt = create_jwt(&user.email, &config, user.group);
                 // Return the JWT token as a response
                 cookies.add(Cookie::new(AUTH_TOKEN, jwt));
                 let body = Json(json!({
@@ -87,7 +87,7 @@ async fn handler_sign_up(
             .await
             .is_ok()
             {
-                let jwt = create_jwt(&payload_username, &config);
+                let jwt = create_jwt(&payload_username, &config, 0);
                 // Return the JWT token as a response
                 cookies.add(Cookie::new(AUTH_TOKEN, jwt));
                 let body = Json(json!({
@@ -119,10 +119,10 @@ async fn handler_logout(cookies: Cookies) -> Result<Json<Value>> {
     Ok(body)
 }
 
-pub fn create_jwt(username: &str, config: &AppConfig) -> String {
+pub fn create_jwt(username: &str, config: &AppConfig, group: u8) -> String {
     encode(
         &Header::default(),
-        &JwtClaims::new(username),
+        &JwtClaims::new(username, group),
         &EncodingKey::from_secret(config.jwt_secret_key.as_ref()),
     )
     .unwrap()

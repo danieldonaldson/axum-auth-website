@@ -14,6 +14,7 @@ pub enum Error {
     AuthFailUserNotFound,
     AuthFailIncorrectPassword,
     AuthFailUserAlreadyExists,
+    AuthFailGroupTooLow,
     QueryFailNoUsername,
     QueryFailNoPassword,
     DBFailFieldNotFound(String),
@@ -40,6 +41,12 @@ impl IntoResponse for Error {
             }
             Self::AuthFailIncorrectPassword => {
                 (StatusCode::UNAUTHORIZED, "Incorrect password")
+            }
+            Self::AuthFailUserAlreadyExists => {
+                (StatusCode::BAD_REQUEST, "User already exists")
+            }
+            Self::AuthFailGroupTooLow => {
+                (StatusCode::FORBIDDEN, "Auth required")
             }
             Self::QueryFailNoUsername => {
                 (StatusCode::BAD_REQUEST, "Missing username in request")
