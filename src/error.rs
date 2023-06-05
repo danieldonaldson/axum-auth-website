@@ -13,6 +13,7 @@ pub enum Error {
     AuthFailTokenExpired,
     AuthFailUserNotFound,
     AuthFailIncorrectPassword,
+    AuthFailUserAlreadyExists,
     QueryFailNoUsername,
     QueryFailNoPassword,
     DBFailFieldNotFound(String),
