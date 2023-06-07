@@ -1,9 +1,9 @@
-axum:
- - clean up
-   - add static routing for images/css/etc
-
-jwt:
- - when there is an error on the token, redirect to /login
- - add group
-    - use binary system
-    - i.e. user = 1, parent = 2, user and parent = 3, support = 4, admin = 256
+- Decide on frontend vs backend split
+- Add unit testing
+- Cargo watch for better reloading
+- Proper logging
+- Rate limiting middleware (do this on nginx rather)
+- Check for unwraps and try to remove where possible
+- Add email validation with a code
+- delete user
+- reset password
