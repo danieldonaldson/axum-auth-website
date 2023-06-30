@@ -44,6 +44,7 @@ pub async fn mw_require_user_or_higher<B>(
     let jwt = req.extensions().get::<JwtClaims>().unwrap();
     dbg!("--> {} ", jwt);
     if jwt.group < 1 {
+        eprint!("Group too low - user");
         return Err(Error::AuthFailGroupTooLow);
     }
 
@@ -57,6 +58,7 @@ pub async fn mw_require_parent_or_higher<B>(
     let jwt = req.extensions().get::<JwtClaims>().unwrap();
     dbg!("--> {} ", jwt);
     if jwt.group < 2 {
+        eprint!("Group too low - parent");
         return Err(Error::AuthFailGroupTooLow);
     }
 

@@ -1,9 +1,10 @@
 - Decide on frontend vs backend split
 - Add unit testing
-- Cargo watch for better reloading
 - Proper logging
-- Rate limiting middleware (do this on nginx rather)
 - Check for unwraps and try to remove where possible
 - Add email validation with a code
 - delete user
+- rename table to users
 - reset password
+- add refresh token
+- add refresh token invalidation to database
